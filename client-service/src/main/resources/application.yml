@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/clientdb}
+    username: ${SPRING_DATASOURCE_USERNAME:client}
+    password: ${SPRING_DATASOURCE_PASSWORD:clientpwd}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+jwt:
+  secret: ${JWT_SECRET:please-change-this-dev-secret}
+  expMinutes: ${JWT_EXP_MINUTES:120}
+
+service:
+  apiKey: ${SERVICE_API_KEY:service-key-change-me}
+
+admin:
+  email: ${ADMIN_EMAIL:admin@microbank.local}
+  password: ${ADMIN_PASSWORD:AdminPassword123!}
+
+logging:
+  level:
+    org.springframework.security: INFO

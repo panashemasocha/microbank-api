@@ -1,0 +1,9 @@
+#!/bin/sh
+MVN_VERSION=3.9.9
+MAVEN_WRAPPER_JAR=.mvn/wrapper/maven-wrapper.jar
+if [ ! -f "$MAVEN_WRAPPER_JAR" ]; then
+  mkdir -p .mvn/wrapper
+  curl -s -L -o "$MAVEN_WRAPPER_JAR" https://repo.maven.apache.org/maven2/io/takari/maven-wrapper/0.5.6/maven-wrapper-0.5.6.jar
+  echo "distributionUrl=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/${MVN_VERSION}/apache-maven-${MVN_VERSION}-bin.zip" > .mvn/wrapper/maven-wrapper.properties
+fi
+exec java -jar $MAVEN_WRAPPER_JAR "$@"

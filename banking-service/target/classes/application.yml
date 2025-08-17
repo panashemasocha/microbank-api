@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/bankingdb}
+    username: ${SPRING_DATASOURCE_USERNAME:banking}
+    password: ${SPRING_DATASOURCE_PASSWORD:bankingpwd}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+jwt:
+  secret: ${JWT_SECRET:please-change-this-dev-secret}
+
+client-service:
+  baseUrl: ${CLIENT_SERVICE_URL:http://localhost:8081}
+  apiKey: ${SERVICE_API_KEY:service-key-change-me}
+
+logging:
+  level:
+    org.springframework.security: INFO

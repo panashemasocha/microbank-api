@@ -1,0 +1,87 @@
+version: "3.9"
+services:
+  client-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: clientdb
+      POSTGRES_USER: client
+      POSTGRES_PASSWORD: clientpwd
+    ports:
+      - "5433:5432"
+    volumes:
+      - clientdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U client -d clientdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  banking-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: bankingdb
+      POSTGRES_USER: banking
+      POSTGRES_PASSWORD: bankingpwd
+    ports:
+      - "5434:5432"
+    volumes:
+      - bankingdb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U banking -d bankingdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  client-service:
+    build: ./client-service
+    depends_on:
+      client-db:
+        condition: service_healthy
+    environment:
+      # DB
+      SPRING_DATASOURCE_URL: jdbc:postgresql://client-db:5432/clientdb
+      SPRING_DATASOURCE_USERNAME: client
+      SPRING_DATASOURCE_PASSWORD: clientpwd
+      # JWT
+      JWT_SECRET: "M6aN3T9G4z8X7L9jQv2yUu1eK9kVv8rKm4xA9mEwP2zBxC8mFwVgHs9Mz1YxUu3Lt7FgQv7YqNtPrQ2SxTzQhYg=="
+      JWT_EXP_MINUTES: "120"
+      # Service-to-service
+      SERVICE_API_KEY: "M6aN3T9G4z8X7L9jQv2yUu1eK9kVv8rKm4xA9mEwP2zBxC8mFwVgHs9Mz1YxUu3Lt7FgQv7YqNtPrQ2SxTzQhYg=="
+      CLIENT_SERVICE_APIKEY: "M6aN3T9G4z8X7L9jQv2yUu1eK9kVv8rKm4xA9mEwP2zBxC8mFwVgHs9Mz1YxUu3Lt7FgQv7YqNtPrQ2SxTzQhYg=="
+      # Seed admin (optional; will be created if not present)
+      ADMIN_EMAIL: "admin@microbank.local"
+      ADMIN_PASSWORD: "AdminPassword123!"
+    ports:
+      - "8081:8080"
+
+  banking-service:
+    build: ./banking-service
+    depends_on:
+      banking-db:
+        condition: service_healthy
+      client-service:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://banking-db:5432/bankingdb
+      SPRING_DATASOURCE_USERNAME: banking
+      SPRING_DATASOURCE_PASSWORD: bankingpwd
+      JWT_SECRET: "M6aN3T9G4z8X7L9jQv2yUu1eK9kVv8rKm4xA9mEwP2zBxC8mFwVgHs9Mz1YxUu3Lt7FgQv7YqNtPrQ2SxTzQhYg=="
+      # URL and API key to talk to Client Service for blacklist check
+      CLIENT_SERVICE_BASEURL: "http://client-service:8080"
+      CLIENT_SERVICE_APIKEY: "M6aN3T9G4z8X7L9jQv2yUu1eK9kVv8rKm4xA9mEwP2zBxC8mFwVgHs9Mz1YxUu3Lt7FgQv7YqNtPrQ2SxTzQhYg=="
+    ports:
+      - "8082:8080"
+
+  api-gateway:
+    image: nginx:1.27-alpine
+    depends_on:
+      - client-service
+      - banking-service
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8088:80"
+
+volumes:
+  clientdb_data:
+  bankingdb_data:
